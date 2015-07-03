@@ -15,8 +15,8 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)  
 public class BTreeTest {
-	HashSet<Long> set=new HashSet<Long>();
-	BTree btree;
+	HashSet<Integer> set=new HashSet<Integer>();
+	BTree<Integer> btree;
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 	}
@@ -32,29 +32,29 @@ public class BTreeTest {
 
 	@Test
 	public void test001Insert() {
-		 btree=new BTree(3);
+		 btree=new BTree<Integer>(3);
 		//顺序插入后查询
 		for(int i=0;i<1000;i++)
-			btree.insert(btree.getRoot(), i);
+			btree.insert( i);
 		for(int i=0;i<1000;i++)
-		assertNotEquals(btree.query(btree.getRoot(), i),-1);
+		assertNotEquals(btree.query( i),null);
 		//逆序插入后执行
 		btree=new BTree(3);
 		for(int i=0;i<1000;i++)
-			btree.insert(btree.getRoot(), 1000-i);
+			btree.insert( 1000-i);
 		for(int i=0;i<1000;i++)
-		assertNotEquals(btree.query(btree.getRoot(), 1000-i),-1);
+		assertNotEquals(btree.query( 1000-i),null);
 		//随机插入后执行
 		btree=new BTree(3);
 		Random ran=new Random(System.currentTimeMillis());
 		
-		for(int i=0;i<50000;i++){
-			long t=ran.nextLong();
-			btree.insert(btree.getRoot(), t);
+		for(int i=0;i<5000;i++){
+			int t=ran.nextInt();
+			btree.insert( t);
 			set.add(t);
 		}
 		for(int i=0;i<set.size();i++){
-		assertNotEquals(btree.query(btree.getRoot(),(long) set.toArray()[i]),-1);
+		assertNotEquals(btree.query((int)set.toArray()[i]),null);
 		}
 		
 	
@@ -62,18 +62,18 @@ public class BTreeTest {
 
 	@Test
 	public void test002Query() {
-		Iterator<Long> it = set.iterator();
+		Iterator<Integer> it = set.iterator();
 		while(it.hasNext()){
-			long tmp=it.next();
-			assertEquals(tmp,btree.query(btree.getRoot(), tmp));
+			Integer tmp=it.next();
+			assertEquals(tmp,btree.query( tmp));
 		}
 	}
 	@Test
 	public void test004ReQuery() {
-		Iterator<Long> it = set.iterator();
+		Iterator<Integer> it = set.iterator();
 		while(it.hasNext()){
-			long tmp=it.next();
-			assertEquals(tmp,btree.query(btree.getRoot(), tmp));
+			Integer tmp=it.next();
+			assertEquals(tmp,btree.query(tmp));
 		}
 	}
 	@Ignore
@@ -95,11 +95,11 @@ public class BTreeTest {
 
 	@Test
 	public void test003Delete() {
-		Iterator<Long> it = set.iterator();
+		Iterator<Integer> it = set.iterator();
 		int count=0;
 		while(it.hasNext() && count++<3000){
-			long tmp=it.next();
-			assertEquals(true,btree.delete(btree.getRoot(), tmp));
+			Integer tmp=it.next();
+			assertEquals(true,btree.delete( tmp));
 		}
 	}
 
