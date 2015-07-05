@@ -11,13 +11,14 @@ package com.mebiuw.malgorithm.tree.btree;
  * @author MebiuW
  *
  */
-public class TreeNode {
-	protected TreeNode parent;
-	protected Comparable keys[];
-	protected TreeNode children[];
+public class TreeNode<K extends Comparable<K>,V> {
+	protected TreeNode<K,V> parent;
+	protected Pair<K,V> keys[];
+	protected TreeNode<K,V> children[];
 	protected boolean isLeaf;
 	protected int maxKeys;
 	protected int pointer;
+	protected V value;
 
 	/**
 	 * <p>
@@ -32,45 +33,18 @@ public class TreeNode {
 	 * @param isleaf
 	 *            是否是树节点 is leaf or not
 	 */
-	private TreeNode(int K, boolean isleaf) {
+	protected TreeNode(int Ks, boolean isleaf) {
 		this.parent = null;
-		this.maxKeys = K;
+		this.maxKeys = Ks;
 		this.isLeaf = isleaf;
-		this.keys = new Comparable[K];
-		this.children = new TreeNode[K + 1];
+		this.keys = new Pair[Ks];
+		this.children = new TreeNode[Ks + 1];
 		pointer = 0;
 	}
 
-	/**
-	 * <p>
-	 * Construct a un-leaf TreeNode
-	 * </p>
-	 * <p>
-	 * 构造一个树节点
-	 * </p>
-	 * 
-	 * @param K
-	 * @return
-	 */
-	public static TreeNode constructUnleafNode(int K) {
-		return new TreeNode(K, true);
-	}
 
-	/**
-	 * <p>
-	 * Construct a Leaf TreeNode
-	 * </p>
-	 * <p>
-	 * 构造一个树节点
-	 * </p>
-	 * 
-	 * @param K
-	 *            ： 关键字数量，和B树里的定义不是一个 the max size of keywords
-	 * @return
-	 */
-	public static TreeNode constructLeafNode(int K) {
-		return new TreeNode(K, true);
-	}
+
+
 	/**
 	 * <p>
 	 * Construct a TreeNode
@@ -84,17 +58,33 @@ public class TreeNode {
 	 * @param isleaf
 	 *            是否是树节点 is leaf or not
 	 */
-	public TreeNode(TreeNode parent, int K, Comparable[] keys,
+	public TreeNode(TreeNode parent, int Ks, Pair<K,V> [] keys,
 			TreeNode[] children, boolean isLeaf, int pointer) {
 		super();
 		this.parent = parent;
 		this.keys = keys;
 		this.children = children;
 		this.isLeaf = isLeaf;
-		this.maxKeys = K;
+		this.maxKeys = Ks;
 		this.pointer = pointer;
 	}
+	/**
+	 * if you use as a Key-Value node,you should use this function to get values
+	 * 如果需要以Key-Value的方式存储数据，则需要在得到TreeNode对象后调用这个方式
+	 * @return
+	 */
+	public V getValue(){
+		return this.value;
+	}
 
+	/**
+	 * if you use as a Key-Value node,you should use this function to set value 
+	 * 如果要以Key-Value的方式存储数据，则需要专门设置这个value
+	 * @param value
+	 */
+	public void setValue(V value){
+		this.value=value;
+	}
 	/**
 	 * 仅供测试
 	 * just for test

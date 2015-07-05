@@ -1,20 +1,16 @@
 package com.mebiuw.malgorithm.tree.btree;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 /**
  * An implementation of b tree according to the introduction to algorithm
- * <p>This implementation works with the Class implemented the Comparable</p>
- * <p>一个根据算法导论基本思想实现的b树，可以配合不同的类（基于Comparable接口）一起使用</p>
+ * <p>This implementation works with the Class implemented the Comparable，this is not Key-value B-Tree</p>
+ * <p>一个根据算法导论基本思想实现的b树，可以配合不同的类（基于Comparable接口）一起使用，这棵树不是KV的方式</p>
  * 
  * @author MebiuW
  *
  * @param <T>
  */
-public class BTree<T extends Comparable> {
+public class BTree<T extends Comparable<T>,V> {
 	private int K;
-	private TreeNode root;
+	private TreeNode<T,V> root;
 	/**
 	 * <p>The B-tree contains 2K-1 keywords(K-1 at least the node except the root), at most,2K children
 	 * </p><p>
@@ -23,7 +19,34 @@ public class BTree<T extends Comparable> {
 	 */
 	public BTree(int k) {
 		this.K = k;
-		this.root = TreeNode.constructUnleafNode(this.K * 2 - 1);
+		this.root = new TreeNode<T,V>(this.K * 2 - 1,true);
+	}
+	/**
+	 * <p>
+	 * delete the given 
+	 * </p><p>
+	 * 删除数据 调用另外一个方法
+	 * </p>
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public boolean delete(T key){
+		return this.delete(root,key);
+	}
+	
+	/**
+	 * <p>
+	 * delete the given 
+	 * </p><p>
+	 * 删除数据 调用另外一个方法
+	 * </p>
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public V query(T key){
+		return this.query(root,key);
 	}
 	/**
 	 * <p>
@@ -33,9 +56,9 @@ public class BTree<T extends Comparable> {
 	 * </p>
 	 * @param value 需要插入的数据
 	 */
-	public void insert( T value) {
+	public void insert( T key,V value) {
 		if (root.pointer == 2 * K - 1) {
-			TreeNode newRoot = TreeNode.constructUnleafNode(2 * K - 1);
+			TreeNode<T,V> newRoot = new TreeNode<T,V>(2 * K - 1,true);
 			newRoot.pointer = 0;
 			newRoot.children[0] = root;
 			newRoot.isLeaf = false;
@@ -43,11 +66,11 @@ public class BTree<T extends Comparable> {
 			this.split(root, 0);
 		}
 		// insert;
-		TreeNode node = root;
+		TreeNode<T,V> node = root;
 		while (!node.isLeaf) {
 	
 			int index = 0;
-			while (index < node.pointer && node.keys[index].compareTo(value) <0) {
+			while (index < node.pointer && node.keys[index].compareTo(key) <0) {
 				/** 不能这样 这样会造成插入的时候当前节点性质不满足
 				if (node.children[index].pointer == 2 * K - 1)
 					this.split(node, index);
@@ -56,48 +79,20 @@ public class BTree<T extends Comparable> {
 			}
 			if (node.children[index].pointer == 2 * K - 1) {
 				this.split(node, index);
-				if (index < node.pointer && node.keys[index].compareTo(value) <0)
+				if (index < node.pointer && node.keys[index].compareTo(key) <0)
 					index++;
 			}
 			node = node.children[index];
 		}
 		// leaf;
 		int index = 0;
-		while (index < node.pointer && node.keys[index].compareTo(value) <0) {
+		while (index < node.pointer && node.keys[index].compareTo(key) <0) {
 			index++;
 		}
 		for (int i = 2 * K - 1 - 1; i >= index + 1; i--)
 			node.keys[i] = node.keys[i - 1];
-		node.keys[index] = value;
+		node.keys[index] = new Pair<T,V>(key,value);
 		node.pointer++;
-	}
-	
-	/**
-	 * <p>
-	 * delete the given 
-	 * </p><p>
-	 * 删除数据 调用另外一个方法
-	 * </p>
-	 * 
-	 * @param value
-	 * @return
-	 */
-	public boolean delete(T value){
-		return this.delete(root,value);
-	}
-	
-	/**
-	 * <p>
-	 * delete the given 
-	 * </p><p>
-	 * 删除数据 调用另外一个方法
-	 * </p>
-	 * 
-	 * @param value
-	 * @return
-	 */
-	public T query(T value){
-		return this.query(root,value);
 	}
 	/**
 	 * <p>Starting from the given node,query whether the given value is exist in given node or it's children
@@ -109,22 +104,22 @@ public class BTree<T extends Comparable> {
 	 * @param value
 	 * @return null:not exist 
 	 */
-	public T query(TreeNode node, T value) {
+	public V query(TreeNode<T,V> node, T key) {
 		if (node.isLeaf == true) {
 			int index = 0;
-			while (index < node.pointer - 1 && node.keys[index].compareTo(value) <0)
+			while (index < node.pointer - 1 && node.keys[index].compareTo(key) <0)
 				index++;
-			if (node.keys[index] .equals( value))
-				return value;
+			if (node.keys[index].compareTo(key)==0 )
+				return node.keys[index] .getValue();
 			else
 				return null;
 		} else {
 			int index = 0;
-			while (index < node.pointer && node.keys[index].compareTo(value) <0)
+			while (index < node.pointer && node.keys[index].compareTo(key) <0)
 				index++;
-			if (index < node.pointer && node.keys[index].equals(value))
-				return value;
-			return this.query(node.children[index], value);
+			if (index < node.pointer && node.keys[index].compareTo(key)==0 )
+				return node.keys[index].getValue();
+			return this.query(node.children[index], key);
 		}
 	}
 	/**
@@ -137,14 +132,14 @@ public class BTree<T extends Comparable> {
 	 * @param value
 	 * @return
 	 */
-	public boolean delete(TreeNode node, T value) {
+	public boolean delete(TreeNode<T,V> node, T key) {
 	
 		int index = 0;
-		while (index < node.pointer && node.keys[index].compareTo(value) <0) {
+		while (index < node.pointer && node.keys[index].compareTo(key) <0) {
 			index++;
 		}
 		if (node.isLeaf) {
-			if (index < node.pointer && node.keys[index].equals(value)) {
+			if (index < node.pointer && node.keys[index].compareTo(key)==0 ) {
 				for (int i = index + 1; i < node.pointer; i++)
 					node.keys[i - 1] = node.keys[i];
 				node.pointer--;
@@ -156,50 +151,52 @@ public class BTree<T extends Comparable> {
 		} else {
 			// not leaf node
 	
-			if (index < node.pointer && node.keys[index].equals(value)) {
+			if (index < node.pointer && node.keys[index].compareTo(key)==0 ) {
 				// 包含了数据的内部节点，找前驱和后继借用节点】
-				TreeNode previousChild = node.children[index];
+				TreeNode<T,V> previousChild = node.children[index];
 				if (previousChild.pointer >= K) {
-					T preValue = this.findPrecursorOne(previousChild);
-					this.delete(previousChild, preValue);
+					 Pair<T, V> preValue = this.findPrecursorOne(previousChild);
+					this.delete(previousChild, preValue.getKey());
 					node.keys[index] = preValue;
 					return true;
 	
 				} else {
-					TreeNode behindChild = node.children[index + 1];
+					TreeNode<T,V> behindChild = node.children[index + 1];
 					if (behindChild.pointer >= K) {
-						T nextValue = this.findSuccessorOne(behindChild);
-						this.delete(behindChild, nextValue);
+						 Pair<T, V> nextValue = this.findSuccessorOne(behindChild);
+						this.delete(behindChild, nextValue.getKey());
 						node.keys[index] = nextValue;
 						return true;
 					} else {
 						// 删除当前节点 合并他的两个子节点
-						for (int i = index; i < node.pointer; i++)
+						 Pair<T, V> tmp = node.keys[index];
+						for (int i = index; i < node.pointer-1; i++)
 							node.keys[i] = node.keys[i + 1];
-						for (int i = index; i <= node.pointer; i++)
+						for (int i = index; i <= node.pointer-1; i++)
 							node.children[i] = node.children[i + 1];
-						node.keys[node.pointer-1]=-1;
+						node.keys[node.pointer-1]=null;
 						node.children[node.pointer]=null;
 						node.pointer--;
-						previousChild.keys[previousChild.pointer++] = value;
+						//TODO  肯那个有bug***********
+						previousChild.keys[previousChild.pointer++] = tmp;
 						for (int i = 0; i < K - 1; i++) {
 							previousChild.keys[previousChild.pointer] = behindChild.keys[i];
-							behindChild.keys[i]=-1;
+							behindChild.keys[i]=null;
 							previousChild.children[previousChild.pointer++] = behindChild.children[i];
 							behindChild.children[i]=null;
 						}
 						previousChild.children[previousChild.pointer] = behindChild.children[K - 1];
 						 behindChild.children[K - 1]=null;
-						return this.delete(node, value);
+						return this.delete(node, key);
 	
 					}
 				}
 			} else {
 				// value isnot contained in this node
-				TreeNode nextNode = node.children[index];
+				TreeNode<T,V> nextNode = node.children[index];
 				if (nextNode.pointer < K) {
-					TreeNode previousChild = index-1>0?node.children[index-1]:null;
-					TreeNode behindChild = index+1<K?node.children[index + 1]:null;
+					TreeNode<T,V> previousChild = index-1>0?node.children[index-1]:null;
+					TreeNode<T,V> behindChild = index+1<K?node.children[index + 1]:null;
 					if (previousChild!=null && previousChild.pointer >= K) {
 						for (int i = K - 1; i > 0; i--)
 							nextNode.keys[i] = nextNode.keys[i - 1];
@@ -225,8 +222,8 @@ public class BTree<T extends Comparable> {
 						// merge 需要对节点进行合并 保证大小
 						int mergeIndex = index;
 						//mergeIndex 为合并后保留的 fiend不保留
-						TreeNode mergeChild = null;
-						TreeNode friendChild;
+						TreeNode<T,V> mergeChild = null;
+						TreeNode<T,V> friendChild;
 						//需要处理的当前节点的位置
 						int nodeIndex=index;
 						if (index > 0) {
@@ -243,7 +240,7 @@ public class BTree<T extends Comparable> {
 						mergeChild.keys[K - 1] = node.keys[nodeIndex];
 						for (int i = 0; i < K - 1; i++){
 							mergeChild.keys[K + i] = friendChild.keys[i];
-							friendChild.keys[i]=-1;
+							friendChild.keys[i]=null;
 						}
 						for (int i = 0; i <= K - 1; i++){
 							mergeChild.children[K + i] = friendChild.children[i];
@@ -255,7 +252,7 @@ public class BTree<T extends Comparable> {
 						
 						for (int i = nodeIndex+1; i <= node.pointer - 1; i++)
 							node.children[i] = node.children[i + 1];
-						node.keys[node.pointer-1]=-1;
+						node.keys[node.pointer-1]=null;
 						node.children[node.pointer]=null;
 						node.children[nodeIndex]=mergeChild;
 						node.pointer--;
@@ -265,7 +262,7 @@ public class BTree<T extends Comparable> {
 					}
 	
 				}
-				return this.delete(nextNode, value);
+				return this.delete(nextNode, key);
 			}
 		}
 	
@@ -282,15 +279,15 @@ public class BTree<T extends Comparable> {
 	 * @param node
 	 * @param index
 	 */
-	protected void split(TreeNode node, int index) {
-		TreeNode newNode = TreeNode.constructLeafNode(2 * this.K - 1);
-		TreeNode oldNode = node.children[index];
+	protected void split(TreeNode<T,V> node, int index) {
+		TreeNode<T,V> newNode = new TreeNode<T,V>(2 * this.K - 1,true);
+		TreeNode<T,V> oldNode = node.children[index];
 		newNode.isLeaf = oldNode.isLeaf;
 		newNode.pointer = oldNode.pointer = this.K - 1;
-		int i, j;
+		int i;
 		for (i = K; i < 2 * K - 1; i++) {
 			newNode.keys[i - K] = oldNode.keys[i];
-			oldNode.keys[i] = -1;
+			oldNode.keys[i] = null;
 		}
 		if (!oldNode.isLeaf) {
 			for (i = K; i < 2 * K; i++) {
@@ -308,9 +305,6 @@ public class BTree<T extends Comparable> {
 		node.keys[index] = oldNode.keys[K - 1];
 		node.children[index + 1] = newNode;
 		node.pointer++;
-		if(node.pointer>2*K-1){
-			int id=1/0;
-		}
 
 	}
 
@@ -323,9 +317,9 @@ public class BTree<T extends Comparable> {
 	 * @param node
 	 * @return
 	 */
-	public T findPrecursorOne(TreeNode node) {
+	public Pair<T,V> findPrecursorOne(TreeNode<T,V> node) {
 		if (node.isLeaf)
-			return (T)node.keys[node.pointer - 1];
+			return node.keys[node.pointer - 1];
 		else
 			return this.findPrecursorOne(node.children[node.pointer]);
 	}
@@ -338,9 +332,9 @@ public class BTree<T extends Comparable> {
 	 * @param node
 	 * @return
 	 */
-	public T findSuccessorOne(TreeNode node) {
+	public Pair<T,V>  findSuccessorOne(TreeNode<T,V> node) {
 		if (node.isLeaf)
-			return (T)node.keys[0];
+			return node.keys[0];
 		else
 			return this.findSuccessorOne(node.children[0]);
 	}
